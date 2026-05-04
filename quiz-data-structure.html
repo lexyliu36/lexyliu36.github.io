@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scheduling & Booking — Data Structures</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0d;
+      --panel:     #141414;
+      --panel2:    #1c1c1c;
+      --border:    #272727;
+      --border2:   #333;
+      --accent:    #6366f1;
+      --accent-d:  rgba(99,102,241,0.15);
+      --green:     #22c55e;
+      --green-d:   rgba(34,197,94,0.12);
+      --red:       #ef4444;
+      --red-d:     rgba(239,68,68,0.12);
+      --yellow:    #eab308;
+      --teal:      #2dd4bf;
+      --text:      #d4d4d4;
+      --muted:     #6b7280;
+      --bright:    #f3f4f6;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; overflow: hidden; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 5px; border: 1px solid transparent; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .btn-accent  { background: var(--accent); color: #fff; }
+    .btn-accent:hover { opacity: 0.85; }
+    .btn-ghost   { background: transparent; color: var(--muted); border-color: var(--border2); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .btn-green   { background: var(--green); color: #000; font-weight: 600; font-size: 13px; padding: 8px 20px; }
+    .btn-green:hover { opacity: 0.9; }
+
+    /* ── SCREENS ── */
+    .screen { display: none; width: 100%; height: 100vh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ═══════════════════════════════════════════
+       HOME
+    ═══════════════════════════════════════════ */
+    #screen-home { align-items: center; justify-content: center; }
+    .home-inner { max-width: 600px; width: 100%; padding: 32px; }
+
+    .home-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .home-eyebrow .tag { background: var(--accent-d); color: var(--accent); border: 1px solid rgba(99,102,241,.3); padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
+
+    .home-inner h1 { font-size: 2rem; font-weight: 800; color: var(--bright); margin-bottom: 8px; line-height: 1.2; }
+    .home-inner h1 em { font-style: normal; color: var(--accent); }
+    .home-inner p  { color: var(--muted); font-size: 13px; line-height: 1.7; margin-bottom: 24px; }
+
+    .home-problems { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+    .hp-row { display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+    .hp-row:last-child { border-bottom: none; }
+    .hp-row:hover { background: var(--panel); }
+    .hp-num { font-size: 11px; color: var(--muted); width: 20px; text-align: right; }
+    .hp-title { flex: 1; font-size: 12px; color: var(--text); }
+    .hp-tags { display: flex; gap: 5px; }
+    .hp-tag { font-size: 10px; padding: 1px 7px; border-radius: 3px; font-weight: 600; }
+    .tag-easy { background: rgba(34,197,94,.1); color: var(--green); }
+    .tag-med  { background: rgba(234,179,8,.1); color: var(--yellow); }
+    .tag-hard { background: rgba(239,68,68,.1); color: var(--red); }
+    .tag-ds   { background: rgba(45,212,191,.08); color: var(--teal); border: 1px solid rgba(45,212,191,.2); }
+
+    .home-actions { display: flex; gap: 10px; }
+    .home-note { font-size: 11px; color: var(--muted); margin-top: 10px; }
+
+    /* ═══════════════════════════════════════════
+       CODERPAD LAYOUT
+    ═══════════════════════════════════════════ */
+    #screen-quiz { flex-direction: column; overflow: hidden; }
+
+    /* ── Top bar ── */
+    .topbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 0; background: var(--panel); border-bottom: 1px solid var(--border); height: 40px; }
+    .topbar-left { display: flex; align-items: stretch; height: 100%; }
+    .topbar-brand { display: flex; align-items: center; gap: 6px; padding: 0 16px; font-weight: 700; font-size: 12px; color: var(--bright); border-right: 1px solid var(--border); }
+    .topbar-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+    .progress-info { display: flex; align-items: center; padding: 0 14px; font-size: 11px; color: var(--muted); gap: 4px; }
+    .progress-info strong { color: var(--green); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; padding-right: 12px; }
+    .lang-badge { background: var(--panel2); border: 1px solid var(--border); padding: 2px 8px; border-radius: 4px; font-size: 11px; color: var(--teal); font-family: monospace; }
+
+    /* thin progress strip */
+    .progress-strip { height: 2px; background: var(--border); flex-shrink: 0; }
+    .progress-fill  { height: 100%; background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width 0.4s; }
+
+    /* ── 3-column body ── */
+    .cp-body { flex: 1; display: flex; overflow: hidden; }
+
+    /* Problem list sidebar */
+    .prob-list { width: 220px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--border); overflow-y: auto; padding: 8px 0; }
+    .pl-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.1s; }
+    .pl-item:hover { background: var(--panel2); }
+    .pl-item.active { background: var(--accent-d); border-left-color: var(--accent); }
+    .pl-num   { font-size: 10px; color: var(--muted); width: 16px; text-align: right; flex-shrink: 0; font-family: monospace; }
+    .pl-status { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; }
+    .pl-status.idle { background: var(--panel2); border: 1px solid var(--border2); }
+    .pl-status.pass { background: var(--green); color: #000; }
+    .pl-status.fail { background: var(--red); color: #fff; }
+    .pl-status.part { background: var(--yellow); color: #000; }
+    .pl-title { flex: 1; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pl-diff  { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; flex-shrink: 0; }
+    .pl-item.active .pl-title { color: var(--bright); }
+
+    /* Description panel */
+    .desc-panel { width: 38%; flex-shrink: 0; border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+    .desc-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .desc-header .q-num { font-size: 10px; color: var(--muted); font-family: monospace; margin-bottom: 4px; }
+    .desc-header .q-title { font-size: 1.1rem; font-weight: 700; color: var(--bright); margin-bottom: 10px; }
+    .desc-header .q-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .q-tag { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: 600; }
+    .desc-body { padding: 16px 18px; font-size: 12.5px; line-height: 1.75; color: var(--text); flex: 1; }
+    .desc-body p  { margin-bottom: 12px; }
+    .desc-body ul { padding-left: 18px; margin-bottom: 12px; }
+    .desc-body li { margin-bottom: 4px; }
+    .desc-body code { background: var(--panel2); border: 1px solid var(--border2); padding: 1px 5px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 11.5px; color: var(--teal); }
+    .desc-body pre { background: #111; border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; margin: 10px 0; font-family: 'Consolas', monospace; font-size: 11.5px; color: #9ca3af; overflow-x: auto; line-height: 1.6; white-space: pre; }
+    .desc-body h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 16px 0 6px; font-weight: 700; }
+    .desc-body strong { color: var(--bright); font-weight: 600; }
+    .desc-body .hint-box { background: var(--accent-d); border: 1px solid rgba(99,102,241,.3); border-radius: 8px; padding: 10px 12px; margin-top: 14px; font-size: 12px; color: var(--text); }
+    .desc-body .hint-box .hint-title { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .complexity-row { display: flex; gap: 12px; margin-top: 14px; }
+    .complexity-chip { background: var(--panel2); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 10px; font-size: 11px; }
+    .complexity-chip .cc-label { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .complexity-chip .cc-val { color: var(--teal); font-family: monospace; font-size: 12px; margin-top: 1px; }
+
+    /* Editor panel */
+    .editor-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .editor-bar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: var(--panel); border-bottom: 1px solid var(--border); }
+    .editor-bar-left { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+    .editor-bar-left .hint-btn { font-size: 10px; padding: 2px 8px; background: transparent; border: 1px solid var(--border2); border-radius: 4px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .editor-bar-left .hint-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .editor-bar-right { display: flex; gap: 6px; }
+    .editor-wrap { flex: 1; overflow: hidden; }
+    .editor-wrap .CodeMirror        { height: 100%; font-family: 'Consolas', 'Fira Code', 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.65; }
+    .editor-wrap .CodeMirror-scroll { height: 100%; }
+
+    /* Console / test output */
+    .console { flex-shrink: 0; height: 220px; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+    .console-tabs { flex-shrink: 0; display: flex; align-items: center; background: var(--panel); border-bottom: 1px solid var(--border); padding: 0 12px; gap: 0; }
+    .console-tab { padding: 7px 14px; font-size: 11px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s; }
+    .console-tab.active { color: var(--bright); border-bottom-color: var(--accent); }
+    .console-summary { margin-left: auto; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
+    .console-summary.ok  { background: var(--green-d); color: var(--green); }
+    .console-summary.err { background: var(--red-d); color: var(--red); }
+    .console-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .console-idle { padding: 20px; text-align: center; color: var(--muted); font-size: 12px; }
+    .test-row { display: flex; align-items: flex-start; gap: 10px; padding: 5px 14px; font-size: 12px; line-height: 1.5; }
+    .test-row .ti { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    .test-row.pass .ti { color: var(--green); }
+    .test-row.fail .ti { color: var(--red); }
+    .test-row .td { color: var(--text); }
+    .test-row .te { font-size: 11px; color: var(--red); font-family: monospace; margin-top: 2px; word-break: break-all; }
+
+    /* ═══════════════════════════════════════════
+       RESULTS
+    ═══════════════════════════════════════════ */
+    #screen-results { align-items: center; justify-content: center; overflow-y: auto; }
+    .results-card { max-width: 560px; width: 100%; margin: 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 32px; text-align: center; }
+    .r-ring { width: 110px; height: 110px; border-radius: 50%; border: 4px solid var(--accent); margin: 0 auto 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .r-ring .pct  { font-size: 1.9rem; font-weight: 800; color: var(--accent); }
+    .r-ring .frac { font-size: 11px; color: var(--muted); }
+    .r-grade   { font-size: 1.2rem; font-weight: 700; color: var(--bright); margin-bottom: 4px; }
+    .r-tagline { color: var(--muted); font-size: 12px; margin-bottom: 24px; }
+    .r-breakdown { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px; }
+    .r-prob { background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 6px; }
+    .r-prob-num  { font-size: 10px; color: var(--muted); margin-bottom: 4px; font-family: monospace; }
+    .r-prob-icon { font-size: 16px; }
+    .r-prob-title { font-size: 9px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .r-actions { display: flex; gap: 10px; justify-content: center; }
+
+    /* CodeMirror overrides */
+    .CodeMirror { background: #151515 !important; }
+    .CodeMirror-gutters { background: #151515 !important; border-right-color: var(--border) !important; }
+    .CodeMirror-selected { background: rgba(99,102,241,.3) !important; }
+    .CodeMirror.CodeMirror-readonly { background: #0f1a0f !important; border-top: 2px solid #f59e0b; }
+    .CodeMirror.CodeMirror-readonly .CodeMirror-gutters { background: #0f1a0f !important; }
+
+    ::-webkit-scrollbar       { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ HOME ════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-inner">
+    <div class="home-eyebrow">
+      <span class="tag">CoderPad Style</span>
+      <span class="tag" style="background:rgba(45,212,191,.08);color:var(--teal);border-color:rgba(45,212,191,.2)">JavaScript / React</span>
+    </div>
+    <h1>Scheduling &amp; Booking<br><em>Data Structures</em></h1>
+    <p>10 LeetCode-style problems built around the data structures that power real-world appointment and booking systems — interval trees, heaps, sliding windows, sorted maps, and graph scheduling.</p>
+
+    <div class="home-problems">
+      <div class="hp-row" style="background:var(--panel);border-bottom:1px solid var(--border)">
+        <span class="hp-num" style="color:var(--muted);font-weight:700">#</span>
+        <span class="hp-title" style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px">Problem</span>
+        <span style="font-size:10px;color:var(--muted)">Difficulty</span>
+        <span style="font-size:10px;color:var(--muted);width:90px;text-align:right">DS</span>
+      </div>
+      <div class="hp-row"><span class="hp-num">1</span><span class="hp-title">Can Attend All Meetings</span><span class="hp-tag tag-easy">Easy</span><div class="hp-tags"><span class="hp-tag tag-ds">Sorting</span></div></div>
+      <div class="hp-row"><span class="hp-num">2</span><span class="hp-title">Minimum Meeting Rooms</span><span class="hp-tag tag-med">Medium</span><div class="hp-tags"><span class="hp-tag tag-ds">Min-Heap</span></div></div>
+      <div class="hp-row"><span class="hp-num">3</span><span class="hp-title">Merge Booking Intervals</span><span class="hp-tag tag-med">Medium</span><div class="hp-tags"><span class="hp-tag tag-ds">Merge</span></div></div>
+      <div class="hp-row"><span class="hp-num">4</span><span class="hp-title">My Calendar — No Double Booking</span><span class="hp-tag tag-med">Medium</span><div class="hp-tags"><span class="hp-tag tag-ds">BST</span></div></div>
+      <div class="hp-row"><span class="hp-num">5</span><span class="hp-title">Task Scheduler with Cooldown</span><span class="hp-tag tag-med">Medium</span><div class="hp-tags"><span class="hp-tag tag-ds">Heap</span></div></div>
+      <div class="hp-row"><span class="hp-num">6</span><span class="hp-title">Time-Based Key-Value Store</span><span class="hp-tag tag-med">Medium</span><div class="hp-tags"><span class="hp-tag tag-ds">BinSearch</span></div></div>
+      <div class="hp-row"><span class="hp-num">7</span><span class="hp-title">Find Employee Free Time</span><span class="hp-tag tag-hard">Hard</span><div class="hp-tags"><span class="hp-tag tag-ds">Intervals</span></div></div>
+      <div class="hp-row"><span class="hp-num">8</span><span class="hp-title">Max Bookings in Window</span><span class="hp-tag tag-easy">Easy</span><div class="hp-tags"><span class="hp-tag tag-ds">Sliding Win</span></div></div>
+      <div class="hp-row"><span class="hp-num">9</span><span class="hp-title">AppointmentBook — Design</span><span class="hp-tag tag-hard">Hard</span><div class="hp-tags"><span class="hp-tag tag-ds">HashMap+LL</span></div></div>
+      <div class="hp-row"><span class="hp-num">10</span><span class="hp-title">Valid Task Schedule (Topo Sort)</span><span class="hp-tag tag-med">Medium</span><div class="hp-tags"><span class="hp-tag tag-ds">Graph/BFS</span></div></div>
+    </div>
+
+    <div class="home-actions">
+      <button class="btn btn-green" onclick="startQuiz()">▶ Start Assessment</button>
+      <button class="btn btn-ghost" onclick="startQuiz()">Jump to problem →</button>
+    </div>
+    <p class="home-note">Ctrl / Cmd + Enter to run tests · Hint button available per problem</p>
+  </div>
+</div>
+
+<!-- ═══════════════ CODERPAD ════════════════ -->
+<div id="screen-quiz" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand">
+        <div class="dot"></div>
+        Scheduling DS
+      </div>
+      <div class="progress-info">
+        Solved: <strong id="solved-count">0</strong> / 10
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="lang-badge">JavaScript</span>
+      <button class="btn btn-ghost" onclick="goHome()">← Home</button>
+      <button class="btn btn-accent" onclick="showResults()">Results →</button>
+    </div>
+  </div>
+  <div class="progress-strip"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="cp-body">
+    <!-- Problem List -->
+    <div class="prob-list" id="prob-list"></div>
+
+    <!-- Description -->
+    <div class="desc-panel">
+      <div class="desc-header">
+        <div class="q-num" id="q-num"></div>
+        <div class="q-title" id="q-title"></div>
+        <div class="q-tags" id="q-tags"></div>
+      </div>
+      <div class="desc-body" id="q-body"></div>
+    </div>
+
+    <!-- Editor + Console -->
+    <div class="editor-panel">
+      <div class="editor-bar">
+        <div class="editor-bar-left">
+          <span style="color:var(--muted)">solution.js</span>
+          <button class="hint-btn" onclick="toggleHint()">💡 Hint</button>
+          <button class="hint-btn" id="sol-btn" onclick="toggleSolution()">👁 Show Solution</button>
+        </div>
+        <div class="editor-bar-right">
+          <button class="btn btn-ghost" onclick="resetCode()">Reset</button>
+          <button class="btn btn-green" onclick="runTests()">▶ Run Tests</button>
+        </div>
+      </div>
+      <div class="editor-wrap" id="editor-wrap"></div>
+      <div class="console">
+        <div class="console-tabs">
+          <span class="console-tab active">Test Results</span>
+          <span class="console-summary" id="console-summary"></span>
+        </div>
+        <div class="console-body" id="console-body">
+          <div class="console-idle">Click "Run Tests" or press Ctrl+Enter to execute your solution</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESULTS ════════════════ -->
+<div id="screen-results" class="screen">
+  <div class="results-card">
+    <div class="r-ring">
+      <div class="pct" id="r-pct">0%</div>
+      <div class="frac" id="r-frac">0 / 10</div>
+    </div>
+    <div class="r-grade" id="r-grade"></div>
+    <div class="r-tagline" id="r-tagline"></div>
+    <div class="r-breakdown" id="r-breakdown"></div>
+    <div class="r-actions">
+      <button class="btn btn-ghost" onclick="backToQuiz()">← Review</button>
+      <button class="btn btn-accent" onclick="restartQuiz()">↺ Restart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  PROBLEMS
+// ══════════════════════════════════════════════════════════════
+const PROBLEMS = [
+
+  // ─────────────────────────────────────────────────────────
+  //  1. Can Attend All Meetings
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 1,
+    title: "Can Attend All Meetings",
+    difficulty: "Easy",
+    tags: ["Array", "Sorting", "Intervals"],
+    dsUsed: "Sorting",
+    timeComplexity: "O(n log n)",
+    spaceComplexity: "O(1)",
+    fnName: "canAttendAllMeetings",
+    hint: "Sort intervals by start time. Then check if any meeting starts before the previous one ends.",
+    description: `
+<p>Given an array of time intervals <code>intervals</code> where <code>intervals[i] = [start, end]</code>, return <strong>true</strong> if a person could attend all meetings without any overlap.</p>
+
+<h4>Real-world context</h4>
+<p>This is the first check any booking system makes: <em>"Is this new appointment slot conflict-free?"</em> Used in Google Calendar, Calendly, and every doctor scheduling system.</p>
+
+<h4>Examples</h4>
+<pre>canAttendAllMeetings([[0,30],[5,10],[15,20]])
+// → false  (0-30 overlaps with 5-10)
+
+canAttendAllMeetings([[7,10],[2,4]])
+// → true   (2-4 ends before 7-10 begins)
+
+canAttendAllMeetings([[1,5],[5,10]])
+// → true   (touching endpoints are OK)</pre>
+
+<h4>Constraints</h4>
+<ul>
+  <li><code>0 ≤ intervals.length ≤ 10⁴</code></li>
+  <li><code>intervals[i].length == 2</code></li>
+  <li><code>0 ≤ start < end ≤ 10⁶</code></li>
+</ul>`,
+    starterCode: `/**
+ * @param {number[][]} intervals
+ * @return {boolean}
+ */
+function canAttendAllMeetings(intervals) {
+  // 1. Sort intervals by start time
+  // 2. Check each adjacent pair for overlap
+  // Overlap condition: intervals[i][0] < intervals[i-1][1]
+};`,
+    solution: `/**
+ * @param {number[][]} intervals
+ * @return {boolean}
+ */
+function canAttendAllMeetings(intervals) {
+  intervals.sort((a, b) => a[0] - b[0]);
+  for (let i = 1; i < intervals.length; i++) {
+    // If this meeting starts before the previous one ends → overlap
+    if (intervals[i][0] < intervals[i - 1][1]) return false;
+  }
+  return true;
+}`,
+    tests: [
+      { desc: "Overlapping meetings → false",              run: f => f([[0,30],[5,10],[15,20]]) === false },
+      { desc: "Non-overlapping (unsorted input) → true",  run: f => f([[7,10],[2,4]]) === true },
+      { desc: "Touching endpoints are allowed → true",    run: f => f([[1,5],[5,10]]) === true },
+      { desc: "Empty array → true",                       run: f => f([]) === true },
+      { desc: "Single meeting → true",                    run: f => f([[1,3]]) === true },
+      { desc: "Contained interval → false",               run: f => f([[1,10],[2,5]]) === false },
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  2. Minimum Meeting Rooms
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 2,
+    title: "Minimum Meeting Rooms",
+    difficulty: "Medium",
+    tags: ["Heap", "Sorting", "Greedy"],
+    dsUsed: "Min-Heap",
+    timeComplexity: "O(n log n)",
+    spaceComplexity: "O(n)",
+    fnName: "minMeetingRooms",
+    hint: "Sort start and end times separately. Use two pointers: advance the 'end' pointer whenever the next meeting starts after the earliest end. The answer is the max simultaneous meetings.",
+    description: `
+<p>Given an array of meeting time intervals, return the <strong>minimum number of conference rooms</strong> required to hold all meetings simultaneously.</p>
+
+<h4>Real-world context</h4>
+<p>Booking systems like Zoom, Microsoft Teams, and hotel room reservations need to know: <em>"How many resources (rooms, hosts, doctors) do we need running in parallel right now?"</em></p>
+
+<h4>Examples</h4>
+<pre>minMeetingRooms([[0,30],[5,10],[15,20]])
+// → 2  (0-30 runs the whole time; 5-10 and 15-20 share a room)
+
+minMeetingRooms([[7,10],[2,4]])
+// → 1  (sequential, one room suffices)
+
+minMeetingRooms([[1,5],[2,3],[4,6]])
+// → 2  (1-5 and 2-3 overlap)</pre>
+
+<h4>Approach (Two-pointer simulation of Min-Heap)</h4>
+<p>Sort starts and ends separately. Walk through starts; if the current start is before the earliest end, we need a new room. Otherwise, reuse the room that freed up.</p>`,
+    starterCode: `/**
+ * @param {number[][]} intervals
+ * @return {number}
+ */
+function minMeetingRooms(intervals) {
+  if (!intervals.length) return 0;
+
+  const starts = intervals.map(i => i[0]).sort((a, b) => a - b);
+  const ends   = intervals.map(i => i[1]).sort((a, b) => a - b);
+
+  let rooms = 0;
+  let endPtr = 0;
+
+  for (let i = 0; i < intervals.length; i++) {
+    // If a meeting starts before the earliest ending meeting ends,
+    // we need a new room. Otherwise reuse one.
+  }
+
+  return rooms;
+};`,
+    solution: `/**
+ * @param {number[][]} intervals
+ * @return {number}
+ */
+function minMeetingRooms(intervals) {
+  if (!intervals.length) return 0;
+
+  const starts = intervals.map(i => i[0]).sort((a, b) => a - b);
+  const ends   = intervals.map(i => i[1]).sort((a, b) => a - b);
+
+  let rooms = 0, endPtr = 0;
+
+  for (let i = 0; i < intervals.length; i++) {
+    if (starts[i] < ends[endPtr]) {
+      // New meeting starts before earliest end — need another room
+      rooms++;
+    } else {
+      // A room freed up — reuse it, advance end pointer
+      endPtr++;
+    }
+  }
+
+  return rooms;
+}`,
+    tests: [
+      { desc: "3 meetings, 2 rooms needed",            run: f => f([[0,30],[5,10],[15,20]]) === 2 },
+      { desc: "Sequential meetings need only 1 room",  run: f => f([[7,10],[2,4]]) === 1 },
+      { desc: "2 simultaneous meetings",               run: f => f([[1,5],[2,3],[4,6]]) === 2 },
+      { desc: "Consecutive (touching) share a room",   run: f => f([[0,10],[10,20]]) === 1 },
+      { desc: "Empty input returns 0",                 run: f => f([]) === 0 },
+      { desc: "All overlapping — each needs its own",  run: f => f([[1,10],[2,10],[3,10]]) === 3 },
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  3. Merge Booking Intervals
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 3,
+    title: "Merge Booking Intervals",
+    difficulty: "Medium",
+    tags: ["Array", "Sorting", "Intervals"],
+    dsUsed: "Sorting + Merge",
+    timeComplexity: "O(n log n)",
+    spaceComplexity: "O(n)",
+    fnName: "mergeIntervals",
+    hint: "Sort by start. Walk the array: if the current interval overlaps the last merged one, extend the end. Otherwise push a new interval.",
+    description: `
+<p>Given an array of intervals <code>[start, end]</code>, merge all overlapping intervals and return a sorted array of non-overlapping intervals that cover all the input ranges.</p>
+
+<h4>Real-world context</h4>
+<p>When rendering a calendar view, you need to show blocks of <em>unavailable</em> time. Multiple overlapping bookings should be merged into one visual block — otherwise the UI looks wrong and users can't see their free slots.</p>
+
+<h4>Examples</h4>
+<pre>mergeIntervals([[1,3],[2,6],[8,10],[15,18]])
+// → [[1,6],[8,10],[15,18]]
+
+mergeIntervals([[1,4],[4,5]])
+// → [[1,5]]   (touching merges)
+
+mergeIntervals([[1,4],[2,3]])
+// → [[1,4]]   (contained interval disappears)</pre>`,
+    starterCode: `/**
+ * @param {number[][]} intervals
+ * @return {number[][]}
+ */
+function mergeIntervals(intervals) {
+  if (!intervals.length) return [];
+
+  // Sort by start time
+  intervals.sort((a, b) => a[0] - b[0]);
+
+  const merged = [intervals[0]];
+
+  for (let i = 1; i < intervals.length; i++) {
+    const [start, end] = intervals[i];
+    const last = merged[merged.length - 1];
+
+    // If current overlaps with last merged interval, extend it.
+    // Otherwise push a new one.
+  }
+
+  return merged;
+};`,
+    solution: `/**
+ * @param {number[][]} intervals
+ * @return {number[][]}
+ */
+function mergeIntervals(intervals) {
+  if (!intervals.length) return [];
+
+  intervals.sort((a, b) => a[0] - b[0]);
+  const merged = [intervals[0]];
+
+  for (let i = 1; i < intervals.length; i++) {
+    const [start, end] = intervals[i];
+    const last = merged[merged.length - 1];
+
+    if (start <= last[1]) {
+      // Overlapping — extend the end of the last merged interval
+      last[1] = Math.max(last[1], end);
+    } else {
+      // No overlap — start a new merged interval
+      merged.push([start, end]);
+    }
+  }
+
+  return merged;
+}`,
+    tests: [
+      { desc: "Standard merge case",           run: f => JSON.stringify(f([[1,3],[2,6],[8,10],[15,18]])) === '[[1,6],[8,10],[15,18]]' },
+      { desc: "Touching intervals merge",      run: f => JSON.stringify(f([[1,4],[4,5]])) === '[[1,5]]' },
+      { desc: "Contained interval merges",     run: f => JSON.stringify(f([[1,4],[2,3]])) === '[[1,4]]' },
+      { desc: "No overlap — unchanged",        run: f => JSON.stringify(f([[1,2],[3,4]])) === '[[1,2],[3,4]]' },
+      { desc: "Unsorted input still merges",   run: f => JSON.stringify(f([[3,4],[1,2]])) === '[[1,2],[3,4]]' },
+      { desc: "Empty input returns []",        run: f => JSON.stringify(f([])) === '[]' },
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  4. My Calendar — No Double Booking
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 4,
+    title: "My Calendar — No Double Booking",
+    difficulty: "Medium",
+    tags: ["Design", "Binary Search", "BST"],
+    dsUsed: "Sorted Array / BST",
+    timeComplexity: "O(n) per booking",
+    spaceComplexity: "O(n)",
+    fnName: "MyCalendar",
+    hint: "Two intervals [s1,e1] and [s2,e2] overlap if and only if s1 < e2 AND s2 < e1. Store bookings sorted by start for faster lookup.",
+    description: `
+<p>Implement a <code>MyCalendar</code> class that books events <strong>without double-booking</strong>.</p>
+<ul>
+  <li><code>constructor()</code> — initializes an empty calendar</li>
+  <li><code>book(start, end)</code> — books <code>[start, end)</code> if no existing event overlaps it. Returns <code>true</code> on success, <code>false</code> otherwise.</li>
+</ul>
+
+<h4>Overlap condition</h4>
+<pre>Two events [s1,e1) and [s2,e2) overlap if:
+s1 < e2  AND  s2 < e1</pre>
+
+<h4>Real-world context</h4>
+<p>This is exactly how Calendly's booking engine works — before confirming a slot, it checks all existing bookings against the requested time range.</p>
+
+<h4>Examples</h4>
+<pre>const cal = new MyCalendar();
+cal.book(10, 20); // → true
+cal.book(15, 25); // → false  (overlaps 10-20)
+cal.book(20, 30); // → true   (starts exactly when previous ends)</pre>`,
+    starterCode: `class MyCalendar {
+  constructor() {
+    this.bookings = []; // store [start, end] pairs
+  }
+
+  /**
+   * @param {number} start
+   * @param {number} end
+   * @return {boolean}
+   */
+  book(start, end) {
+    // Check against all existing bookings for overlap
+    // Overlap: start < existingEnd AND existingStart < end
+    // If no overlap found, add the booking and return true
+  }
+}`,
+    solution: `class MyCalendar {
+  constructor() {
+    this.bookings = [];
+  }
+
+  /**
+   * @param {number} start
+   * @param {number} end
+   * @return {boolean}
+   */
+  book(start, end) {
+    for (const [s, e] of this.bookings) {
+      // Two intervals overlap if start < e AND s < end
+      if (start < e && s < end) return false;
+    }
+    this.bookings.push([start, end]);
+    return true;
+  }
+}`,
+    tests: [
+      {
+        desc: "First booking always succeeds",
+        run: (MyCalendar) => new MyCalendar().book(10, 20) === true
+      },
+      {
+        desc: "Overlapping booking is rejected",
+        run: (MyCalendar) => { const c = new MyCalendar(); c.book(10, 20); return c.book(15, 25) === false; }
+      },
+      {
+        desc: "Non-overlapping booking after first is accepted",
+        run: (MyCalendar) => { const c = new MyCalendar(); c.book(10, 20); return c.book(20, 30) === true; }
+      },
+      {
+        desc: "Booking that starts before and ends inside is rejected",
+        run: (MyCalendar) => { const c = new MyCalendar(); c.book(10, 20); return c.book(5, 15) === false; }
+      },
+      {
+        desc: "Contained booking is rejected",
+        run: (MyCalendar) => { const c = new MyCalendar(); c.book(10, 30); return c.book(15, 20) === false; }
+      },
+      {
+        desc: "Multiple sequential bookings all succeed",
+        run: (MyCalendar) => {
+          const c = new MyCalendar();
+          return c.book(0, 10) && c.book(10, 20) && c.book(20, 30);
+        }
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  5. Task Scheduler with Cooldown
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 5,
+    title: "Task Scheduler with Cooldown",
+    difficulty: "Medium",
+    tags: ["Heap", "Greedy", "Counting"],
+    dsUsed: "Max-Heap + Greedy",
+    timeComplexity: "O(n)",
+    spaceComplexity: "O(1)",
+    fnName: "taskScheduler",
+    hint: "The answer is max(tasks.length, (maxFreq - 1) * (n + 1) + countOfMaxFreqTasks). The most frequent task determines the minimum time frame.",
+    description: `
+<p>Given a list of <code>tasks</code> (strings) and an integer <code>n</code> (cooldown period), return the <strong>minimum number of time units</strong> needed to finish all tasks.</p>
+<p>The same task must be separated by at least <code>n</code> time units. The CPU can be idle during the gap.</p>
+
+<h4>Real-world context</h4>
+<p>Appointment systems enforce cooldowns: a doctor can't see two patients back-to-back for the same procedure, or a room needs cleaning time between bookings. This formula solves the minimum time needed.</p>
+
+<h4>Examples</h4>
+<pre>taskScheduler(["A","A","A","B","B","B"], 2)
+// → 8
+// A → B → idle → A → B → idle → A → B
+
+taskScheduler(["A","A","A","B","B","B"], 0)
+// → 6  (no cooldown needed, just run them all)
+
+taskScheduler(["A","A","A","A","A","A","B","C","D","E","F","G"], 2)
+// → 16</pre>
+
+<h4>Key insight</h4>
+<pre>answer = Math.max(
+  tasks.length,
+  (maxFreq - 1) * (n + 1) + countOfTasksWithMaxFreq
+)</pre>`,
+    starterCode: `/**
+ * @param {string[]} tasks
+ * @param {number} n
+ * @return {number}
+ */
+function taskScheduler(tasks, n) {
+  // Your solution here
+};`,
+    solution: `/**
+ * @param {string[]} tasks
+ * @param {number} n
+ * @return {number}
+ */
+function taskScheduler(tasks, n) {
+  const freq = {};
+  for (const t of tasks) freq[t] = (freq[t] || 0) + 1;
+
+  const maxFreq  = Math.max(...Object.values(freq));
+  const maxCount = Object.values(freq).filter(f => f === maxFreq).length;
+
+  // The formula: fill (maxFreq-1) full "frames" of size (n+1),
+  // then append the tasks that share the max frequency.
+  // But if tasks are plentiful enough, no idle time is needed at all.
+  return Math.max(tasks.length, (maxFreq - 1) * (n + 1) + maxCount);
+}`,
+    tests: [
+      { desc: "Classic case with n=2 → 8",          run: f => f(["A","A","A","B","B","B"], 2) === 8 },
+      { desc: "No cooldown (n=0) → just task count", run: f => f(["A","A","A","B","B","B"], 0) === 6 },
+      { desc: "Many unique tasks fill the gaps",     run: f => f(["A","A","A","A","A","A","B","C","D","E","F","G"], 2) === 16 },
+      { desc: "Single task type with cooldown",      run: f => f(["A","A","A"], 2) === 7 }, // A _ _ A _ _ A
+      { desc: "Two equal-frequency tasks, n=2",      run: f => f(["A","A","B","B"], 2) === 5 }, // A B _ A B
+      { desc: "All unique tasks, no extra idle time", run: f => f(["A","B","C","D"], 2) === 4 },
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  6. Time-Based Key-Value Store
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 6,
+    title: "Time-Based Key-Value Store",
+    difficulty: "Medium",
+    tags: ["HashMap", "Binary Search", "Design"],
+    dsUsed: "HashMap + Binary Search",
+    timeComplexity: "O(log n) get, O(1) set",
+    spaceComplexity: "O(n)",
+    fnName: "TimeMap",
+    hint: "Store arrays of [timestamp, value] per key. For get(), binary search for the largest timestamp ≤ the requested timestamp.",
+    description: `
+<p>Design a time-based key-value data structure that stores multiple values for the same key at different timestamps and retrieves the <strong>most recent value at or before</strong> a given timestamp.</p>
+<ul>
+  <li><code>set(key, value, timestamp)</code> — stores the value. Timestamps are always increasing.</li>
+  <li><code>get(key, timestamp)</code> — returns the value set at the <strong>largest timestamp ≤ timestamp</strong>. Returns <code>""</code> if none exists.</li>
+</ul>
+
+<h4>Real-world context</h4>
+<p>Booking history systems: <em>"What was the price of this appointment slot at time T?"</em> Or audit logs: <em>"What was the user's subscription tier when this booking was made?"</em></p>
+
+<h4>Examples</h4>
+<pre>const tm = new TimeMap();
+tm.set("clinic", "open",   1);
+tm.get("clinic", 1);   // → "open"
+tm.get("clinic", 3);   // → "open"  (most recent at or before 3)
+tm.set("clinic", "closed", 4);
+tm.get("clinic", 4);   // → "closed"
+tm.get("clinic", 3);   // → "open"  (4 is after 3)</pre>`,
+    starterCode: `class TimeMap {
+  constructor() {
+    this.store = {};
+  }
+
+  /**
+   * @param {string} key
+   * @param {string} value
+   * @param {number} timestamp  — always increasing per key
+   */
+  set(key, value, timestamp) {
+    // Store [timestamp, value] pairs per key
+    // Hint: timestamps are guaranteed to increase, so the array stays sorted
+  }
+
+  /**
+   * @param {string} key
+   * @param {number} timestamp
+   * @return {string}
+   */
+  get(key, timestamp) {
+    // Return the value with the largest timestamp <= the given timestamp
+    // Return "" if no such value exists
+    // Hint: use binary search — O(log n) is expected
+  }
+}`,
+    solution: `class TimeMap {
+  constructor() {
+    this.store = {}; // key → [[timestamp, value], ...]
+  }
+
+  set(key, value, timestamp) {
+    if (!this.store[key]) this.store[key] = [];
+    this.store[key].push([timestamp, value]);
+    // timestamps are guaranteed increasing, so the array stays sorted
+  }
+
+  get(key, timestamp) {
+    if (!this.store[key]) return "";
+    const arr = this.store[key];
+
+    // Binary search: find the largest timestamp <= requested timestamp
+    let lo = 0, hi = arr.length - 1, result = "";
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (arr[mid][0] <= timestamp) {
+        result = arr[mid][1]; // valid candidate — try to go right for a later one
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;         // too late — go left
+      }
+    }
+    return result;
+  }
+}`,
+    tests: [
+      {
+        desc: "get at exact timestamp returns that value",
+        run: (TimeMap) => { const tm = new TimeMap(); tm.set("a","foo",1); return tm.get("a",1) === "foo"; }
+      },
+      {
+        desc: "get at later timestamp returns last set value",
+        run: (TimeMap) => { const tm = new TimeMap(); tm.set("a","foo",1); return tm.get("a",5) === "foo"; }
+      },
+      {
+        desc: "get before any set returns empty string",
+        run: (TimeMap) => { const tm = new TimeMap(); tm.set("a","foo",5); return tm.get("a",3) === ""; }
+      },
+      {
+        desc: "get returns most recent value at or before timestamp",
+        run: (TimeMap) => {
+          const tm = new TimeMap();
+          tm.set("a","v1",1); tm.set("a","v2",4);
+          return tm.get("a",3) === "v1" && tm.get("a",4) === "v2" && tm.get("a",7) === "v2";
+        }
+      },
+      {
+        desc: "get on missing key returns empty string",
+        run: (TimeMap) => new TimeMap().get("missing", 10) === ""
+      },
+      {
+        desc: "Multiple keys are independent",
+        run: (TimeMap) => {
+          const tm = new TimeMap();
+          tm.set("x","X",1); tm.set("y","Y",2);
+          return tm.get("x",3) === "X" && tm.get("y",3) === "Y";
+        }
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  7. Find Employee Free Time
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 7,
+    title: "Find Employee Free Time",
+    difficulty: "Hard",
+    tags: ["Intervals", "Sorting", "Merge"],
+    dsUsed: "Flatten + Sort + Merge",
+    timeComplexity: "O(n log n)",
+    spaceComplexity: "O(n)",
+    fnName: "findFreeSlots",
+    hint: "Flatten all schedules into one array, sort by start, then scan for gaps between the running max-end and the next start.",
+    description: `
+<p>Given a list of employees' working schedules (each employee has an array of <code>[start, end]</code> intervals), find all time slots where <strong>no employee is working</strong> — the common free time gaps.</p>
+
+<h4>Real-world context</h4>
+<p>Used by scheduling tools like Doodle and When2meet: <em>"Find a meeting time when everyone on the team is free."</em> Also used in healthcare to find open appointment windows across multiple providers.</p>
+
+<h4>Examples</h4>
+<pre>findFreeSlots([
+  [[1,3],[6,7]],   // Employee 1
+  [[2,4]],         // Employee 2
+  [[2,5],[9,12]]   // Employee 3
+])
+// Union of all busy times: [1,5] [6,7] [9,12]
+// → [[5,6],[7,9]]  (the gaps)
+
+findFreeSlots([[[1,3],[9,12]], [[2,4]]])
+// → [[4,9]]</pre>
+
+<h4>Approach</h4>
+<ol>
+  <li>Flatten all employee schedules into one list of intervals</li>
+  <li>Sort by start time</li>
+  <li>Scan for gaps between the running end and the next start</li>
+</ol>`,
+    starterCode: `/**
+ * @param {number[][][]} schedules - array of employee schedules
+ * @return {number[][]} - free time intervals
+ */
+function findFreeSlots(schedules) {
+  // Flatten all intervals from all employees
+  const all = schedules.flat().sort((a, b) => a[0] - b[0]);
+
+  if (!all.length) return [];
+
+  const result = [];
+  let maxEnd = all[0][1]; // track the furthest end seen so far
+
+  for (let i = 1; i < all.length; i++) {
+    const [start, end] = all[i];
+    // If there's a gap between maxEnd and the current start, that's free time
+    // Update maxEnd as we go
+  }
+
+  return result;
+};`,
+    solution: `/**
+ * @param {number[][][]} schedules
+ * @return {number[][]}
+ */
+function findFreeSlots(schedules) {
+  // Flatten all employee intervals and sort by start
+  const all = schedules.flat().sort((a, b) => a[0] - b[0]);
+  if (!all.length) return [];
+
+  const result = [];
+  let maxEnd = all[0][1]; // furthest end time seen so far
+
+  for (let i = 1; i < all.length; i++) {
+    const [start, end] = all[i];
+    if (start > maxEnd) {
+      // Gap found between maxEnd and this interval's start
+      result.push([maxEnd, start]);
+    }
+    maxEnd = Math.max(maxEnd, end);
+  }
+
+  return result;
+}`,
+    tests: [
+      {
+        desc: "Three employees → two free slots",
+        run: f => {
+          const r = f([[[1,3],[6,7]],[[2,4]],[[2,5],[9,12]]]);
+          return JSON.stringify(r) === '[[5,6],[7,9]]';
+        }
+      },
+      {
+        desc: "Two employees → one free slot",
+        run: f => JSON.stringify(f([[[1,3],[9,12]],[[2,4]]])) === '[[4,9]]'
+      },
+      {
+        desc: "No gaps → empty array",
+        run: f => JSON.stringify(f([[[1,5]],[[3,8]],[[6,10]]])) === '[]'
+      },
+      {
+        desc: "Single employee with gap",
+        run: f => JSON.stringify(f([[[1,3],[5,7]]])) === '[[3,5]]'
+      },
+      {
+        desc: "Employees with adjacent schedules → no gap",
+        run: f => JSON.stringify(f([[[1,3]],[[3,5]]])) === '[]'
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  8. Max Bookings in Time Window
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 8,
+    title: "Max Bookings in Time Window",
+    difficulty: "Easy",
+    tags: ["Sliding Window", "Two Pointers", "Array"],
+    dsUsed: "Sliding Window",
+    timeComplexity: "O(n log n)",
+    spaceComplexity: "O(1)",
+    fnName: "maxBookingsInWindow",
+    hint: "Sort timestamps. Use a sliding window where left moves forward whenever the window span (timestamps[right] - timestamps[left]) exceeds the window size.",
+    description: `
+<p>Given an array of booking <code>timestamps</code> (in minutes) and a <code>windowSize</code>, return the <strong>maximum number of bookings</strong> that fall within any time window of size <code>windowSize</code>.</p>
+<p>A window is valid if <code>timestamps[right] - timestamps[left] < windowSize</code> (strictly less than).</p>
+
+<h4>Real-world context</h4>
+<p>Rate limiting dashboards: <em>"How many bookings arrived in our busiest 60-minute window?"</em> Helps detect traffic spikes, scale infrastructure, and trigger alerts when a venue or doctor has too many concurrent bookings.</p>
+
+<h4>Examples</h4>
+<pre>maxBookingsInWindow([1, 3, 5, 9, 14], 5)
+// → 3  (bookings at 1,3,5 all fall within a 5-minute window: 5-1=4 < 5)
+
+maxBookingsInWindow([1, 2, 3, 4, 5], 3)
+// → 3  (e.g., 1,2,3 or 2,3,4 or 3,4,5)
+
+maxBookingsInWindow([1, 10, 20], 5)
+// → 1  (all bookings isolated)</pre>`,
+    starterCode: `/**
+ * @param {number[]} timestamps
+ * @param {number} windowSize
+ * @return {number}
+ */
+function maxBookingsInWindow(timestamps, windowSize) {
+  if (!timestamps.length) return 0;
+
+  timestamps.sort((a, b) => a - b);
+
+  let left = 0;
+  let maxCount = 0;
+
+  for (let right = 0; right < timestamps.length; right++) {
+    // Shrink window from left while span >= windowSize
+    // Count = right - left + 1
+  }
+
+  return maxCount;
+};`,
+    solution: `/**
+ * @param {number[]} timestamps
+ * @param {number} windowSize
+ * @return {number}
+ */
+function maxBookingsInWindow(timestamps, windowSize) {
+  if (!timestamps.length) return 0;
+
+  timestamps.sort((a, b) => a - b);
+  let left = 0, maxCount = 0;
+
+  for (let right = 0; right < timestamps.length; right++) {
+    // Shrink the window from the left when it exceeds windowSize
+    while (timestamps[right] - timestamps[left] >= windowSize) {
+      left++;
+    }
+    // All bookings from left..right fall within a valid window
+    maxCount = Math.max(maxCount, right - left + 1);
+  }
+
+  return maxCount;
+}`,
+    tests: [
+      { desc: "[1,3,5,9,14] window=5 → 3",     run: f => f([1,3,5,9,14], 5) === 3 },
+      { desc: "[1,2,3,4,5] window=3 → 3",       run: f => f([1,2,3,4,5], 3) === 3 },
+      { desc: "All isolated → 1",               run: f => f([1,10,20], 5) === 1 },
+      { desc: "Empty input → 0",                run: f => f([], 5) === 0 },
+      { desc: "All same timestamp → all count", run: f => f([5,5,5,5], 10) === 4 },
+      { desc: "Window equals exact span",       run: f => f([1,4,7], 7) === 3 }, // 7-1=6 < 7
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  9. AppointmentBook — Design
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 9,
+    title: "AppointmentBook — Design",
+    difficulty: "Hard",
+    tags: ["Design", "HashMap", "Sorted Array"],
+    dsUsed: "HashMap + Sorted Timeline",
+    timeComplexity: "O(n) book, O(log n) getNext",
+    spaceComplexity: "O(n)",
+    fnName: "AppointmentBook",
+    hint: "Use a Map for O(1) id lookup and an array sorted by start for getNextAfter(). Keep the timeline sorted on every insert.",
+    description: `
+<p>Design an <code>AppointmentBook</code> class for a booking system:</p>
+<ul>
+  <li><code>book(id, start, end)</code> — books the slot if no conflict exists. Returns <code>true</code> on success, <code>false</code> on conflict.</li>
+  <li><code>cancel(id)</code> — cancels the appointment by ID. Returns <code>true</code> if found, <code>false</code> otherwise.</li>
+  <li><code>getNextAfter(time)</code> — returns the first appointment starting <strong>strictly after</strong> <code>time</code>, or <code>null</code> if none.</li>
+</ul>
+
+<h4>Real-world context</h4>
+<p>The backbone of any booking UI — every patient portal, hotel reservation, or court booking system needs <em>conflict detection + cancellation + "what's next" queries</em>.</p>
+
+<h4>Example</h4>
+<pre>const book = new AppointmentBook();
+book.book("apt1", 10, 20); // → true
+book.book("apt2", 15, 25); // → false (conflicts with apt1)
+book.book("apt3", 25, 35); // → true
+book.getNextAfter(12);     // → { id:"apt3", start:25, end:35 }
+book.cancel("apt1");       // → true
+book.book("apt2", 15, 25); // → true  (apt1 removed)</pre>`,
+    starterCode: `class AppointmentBook {
+  constructor() {
+    this.byId = new Map();       // id → { id, start, end }
+    this.timeline = [];          // sorted by start: [{ id, start, end }, ...]
+  }
+
+  book(id, start, end) {
+    // 1. Check for conflicts with existing appointments
+    //    Overlap: start < existing.end AND existing.start < end
+    // 2. If clear, add to byId and insert into timeline (keep sorted)
+    // 3. Return true/false
+  }
+
+  cancel(id) {
+    // 1. If id not in byId, return false
+    // 2. Remove from byId and from timeline
+    // 3. Return true
+  }
+
+  getNextAfter(time) {
+    // Return the first appointment in timeline where start > time
+    // Return null if none found
+  }
+}`,
+    solution: `class AppointmentBook {
+  constructor() {
+    this.byId = new Map();  // id → { id, start, end }
+    this.timeline = [];     // sorted by start
+  }
+
+  book(id, start, end) {
+    // Check for conflicts
+    for (const apt of this.timeline) {
+      if (start < apt.end && apt.start < end) return false;
+    }
+    const apt = { id, start, end };
+    this.byId.set(id, apt);
+    // Insert in sorted order by start
+    let i = this.timeline.length;
+    this.timeline.push(apt);
+    while (i > 0 && this.timeline[i - 1].start > start) {
+      this.timeline[i] = this.timeline[i - 1];
+      i--;
+    }
+    this.timeline[i] = apt;
+    return true;
+  }
+
+  cancel(id) {
+    if (!this.byId.has(id)) return false;
+    this.byId.delete(id);
+    this.timeline = this.timeline.filter(a => a.id !== id);
+    return true;
+  }
+
+  getNextAfter(time) {
+    // Timeline is sorted — first item with start > time is our answer
+    for (const apt of this.timeline) {
+      if (apt.start > time) return apt;
+    }
+    return null;
+  }
+}`,
+    tests: [
+      {
+        desc: "First booking succeeds",
+        run: (AB) => new AB().book("a",10,20) === true
+      },
+      {
+        desc: "Conflicting booking is rejected",
+        run: (AB) => { const b = new AB(); b.book("a",10,20); return b.book("b",15,25) === false; }
+      },
+      {
+        desc: "Non-conflicting booking succeeds",
+        run: (AB) => { const b = new AB(); b.book("a",10,20); return b.book("b",20,30) === true; }
+      },
+      {
+        desc: "cancel() removes appointment and allows re-booking",
+        run: (AB) => {
+          const b = new AB();
+          b.book("a",10,20);
+          b.cancel("a");
+          return b.book("b",10,20) === true;
+        }
+      },
+      {
+        desc: "getNextAfter() returns first appointment after given time",
+        run: (AB) => {
+          const b = new AB();
+          b.book("a",10,20); b.book("c",30,40);
+          const next = b.getNextAfter(15);
+          return next && next.id === "c" && next.start === 30;
+        }
+      },
+      {
+        desc: "getNextAfter() returns null when nothing is later",
+        run: (AB) => { const b = new AB(); b.book("a",10,20); return b.getNextAfter(25) === null; }
+      },
+      {
+        desc: "cancel() returns false for unknown id",
+        run: (AB) => new AB().cancel("ghost") === false
+      }
+    ]
+  },
+
+  // ─────────────────────────────────────────────────────────
+  //  10. Valid Task Schedule (Topological Sort)
+  // ─────────────────────────────────────────────────────────
+  {
+    id: 10,
+    title: "Valid Task Schedule (Topo Sort)",
+    difficulty: "Medium",
+    tags: ["Graph", "BFS", "Topological Sort"],
+    dsUsed: "Adjacency List + In-Degree BFS",
+    timeComplexity: "O(V + E)",
+    spaceComplexity: "O(V + E)",
+    fnName: "isScheduleValid",
+    hint: "Build a directed graph from prerequisites. Use Kahn's algorithm: track in-degrees, start with nodes that have in-degree 0, and BFS. If you process all nodes, no cycle exists.",
+    description: `
+<p>You have <code>numTasks</code> tasks labeled <code>0</code> to <code>numTasks - 1</code>. Some tasks have prerequisites: <code>[a, b]</code> means task <code>a</code> must be completed <strong>before</strong> task <code>b</code>.</p>
+<p>Return <code>true</code> if all tasks can be scheduled (no circular dependencies), or <code>false</code> if there's a cycle.</p>
+
+<h4>Real-world context</h4>
+<p>Project management systems (Jira, Asana) and surgical scheduling tools need to verify that task dependencies form a valid DAG — you can't start post-op care before surgery, and surgery can't depend on post-op care.</p>
+
+<h4>Examples</h4>
+<pre>isScheduleValid(2, [[1,0]])
+// → true  (task 0 before task 1)
+
+isScheduleValid(2, [[1,0],[0,1]])
+// → false  (circular: 0→1→0)
+
+isScheduleValid(4, [[1,0],[2,0],[3,1],[3,2]])
+// → true  (valid DAG)</pre>
+
+<h4>Kahn's Algorithm (BFS Topo Sort)</h4>
+<ol>
+  <li>Build adjacency list and in-degree count</li>
+  <li>Enqueue all nodes with in-degree 0</li>
+  <li>BFS: for each node, decrement neighbors' in-degrees; enqueue if they hit 0</li>
+  <li>If processed count == numTasks → no cycle ✓</li>
+</ol>`,
+    starterCode: `/**
+ * @param {number} numTasks
+ * @param {number[][]} prerequisites  [a, b] means b must come before a
+ * @return {boolean}
+ */
+function isScheduleValid(numTasks, prerequisites) {
+  const graph    = Array.from({ length: numTasks }, () => []);
+  const inDegree = new Array(numTasks).fill(0);
+
+  // Build adjacency list and in-degree array
+  for (const [task, prereq] of prerequisites) {
+    graph[prereq].push(task);
+    inDegree[task]++;
+  }
+
+  // Enqueue all tasks with no prerequisites
+  const queue = [];
+  for (let i = 0; i < numTasks; i++) {
+    if (inDegree[i] === 0) queue.push(i);
+  }
+
+  // BFS
+  let processed = 0;
+  while (queue.length) {
+    const curr = queue.shift();
+    processed++;
+    // For each dependent task, decrement in-degree
+    // If in-degree hits 0, it's ready — add to queue
+  }
+
+  // If we processed all tasks, there's no cycle
+  return processed === numTasks;
+};`,
+    solution: `/**
+ * @param {number} numTasks
+ * @param {number[][]} prerequisites
+ * @return {boolean}
+ */
+function isScheduleValid(numTasks, prerequisites) {
+  const graph    = Array.from({ length: numTasks }, () => []);
+  const inDegree = new Array(numTasks).fill(0);
+
+  // Build adjacency list: prereq → task
+  for (const [task, prereq] of prerequisites) {
+    graph[prereq].push(task);
+    inDegree[task]++;
+  }
+
+  // Start BFS from all nodes with no dependencies
+  const queue = [];
+  for (let i = 0; i < numTasks; i++) {
+    if (inDegree[i] === 0) queue.push(i);
+  }
+
+  let processed = 0;
+  while (queue.length) {
+    const curr = queue.shift();
+    processed++;
+    for (const next of graph[curr]) {
+      inDegree[next]--;
+      if (inDegree[next] === 0) queue.push(next);
+    }
+  }
+
+  // If a cycle exists, some nodes will never reach in-degree 0
+  return processed === numTasks;
+}`,
+    tests: [
+      { desc: "Simple dependency → valid",                  run: f => f(2, [[1,0]]) === true },
+      { desc: "Circular dependency → invalid",              run: f => f(2, [[1,0],[0,1]]) === false },
+      { desc: "Diamond dependency graph → valid",           run: f => f(4, [[1,0],[2,0],[3,1],[3,2]]) === true },
+      { desc: "No prerequisites → always valid",            run: f => f(5, []) === true },
+      { desc: "Self-dependency cycle → invalid",            run: f => f(3, [[0,0]]) === false },
+      { desc: "Longer cycle (3 nodes) → invalid",           run: f => f(3, [[1,0],[2,1],[0,2]]) === false },
+      { desc: "Linear chain → valid",                       run: f => f(4, [[1,0],[2,1],[3,2]]) === true },
+    ]
+  }
+];
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let currentIdx  = 0;
+let editor      = null;
+let hintVisible = false;
+let solutionVisible = false;
+let userCodeBeforeSolution = null;
+const savedCode   = {};
+const testResults = {};
+
+// ══════════════════════════════════════════════════════════════
+//  TEST RUNNER
+// ══════════════════════════════════════════════════════════════
+async function runJSQuestion(problem, code) {
+  let userFn;
+  try {
+    const factory = new Function(code + '\n;\nreturn ' + problem.fnName + ';');
+    userFn = factory();
+    if (userFn === undefined) throw new Error(`'${problem.fnName}' not found. Make sure you define it with that exact name.`);
+  } catch(e) {
+    return [{ pass: false, desc: 'Syntax / Reference Error', error: e.message }];
+  }
+
+  const out = [];
+  for (const test of problem.tests) {
+    try {
+      const pass = test.run.constructor.name === 'AsyncFunction'
+        ? await test.run(userFn)
+        : test.run(userFn);
+      out.push({ pass: Boolean(pass), desc: test.desc });
+    } catch(e) {
+      out.push({ pass: false, desc: test.desc, error: e.message });
+    }
+  }
+  return out;
+}
+
+async function executeTests() {
+  const p    = PROBLEMS[currentIdx];
+  const code = editor.getValue();
+  savedCode[p.id] = code;
+
+  document.getElementById('console-body').innerHTML = '<div class="console-idle">⏳ Running tests…</div>';
+  document.getElementById('console-summary').textContent = '';
+  document.getElementById('console-summary').className = 'console-summary';
+
+  const results = await runJSQuestion(p, code);
+  testResults[p.id] = results;
+  renderConsole(results);
+  updateSidebar();
+  updateProgress();
+}
+
+function renderConsole(results) {
+  const passed = results.filter(t => t.pass).length;
+  const total  = results.length;
+  const ok     = passed === total;
+
+  const sumEl = document.getElementById('console-summary');
+  sumEl.textContent = `${passed} / ${total} passed`;
+  sumEl.className   = 'console-summary ' + (ok ? 'ok' : 'err');
+
+  const html = results.map(t => `
+    <div class="test-row ${t.pass ? 'pass' : 'fail'}">
+      <span class="ti">${t.pass ? '✓' : '✗'}</span>
+      <div>
+        <div class="td">${escHtml(t.desc)}</div>
+        ${!t.pass && t.error ? `<div class="te">${escHtml(t.error)}</div>` : ''}
+      </div>
+    </div>`).join('');
+  document.getElementById('console-body').innerHTML = html;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UI
+// ══════════════════════════════════════════════════════════════
+const DIFF_STYLE = {
+  Easy:   'background:rgba(34,197,94,.1);color:#22c55e',
+  Medium: 'background:rgba(234,179,8,.1);color:#eab308',
+  Hard:   'background:rgba(239,68,68,.1);color:#ef4444',
+};
+const TAG_STYLES = [
+  'background:rgba(99,102,241,.12);color:#818cf8;border:1px solid rgba(99,102,241,.3)',
+  'background:rgba(45,212,191,.08);color:#2dd4bf;border:1px solid rgba(45,212,191,.2)',
+  'background:rgba(249,115,22,.1);color:#fb923c;border:1px solid rgba(249,115,22,.25)',
+  'background:rgba(167,139,250,.1);color:#a78bfa;border:1px solid rgba(167,139,250,.25)',
+];
+
+function loadProblem(idx) {
+  if (editor) {
+    // If we're viewing the solution, save the user's real code — not the solution displayed in the editor
+    savedCode[PROBLEMS[currentIdx].id] = solutionVisible
+      ? (userCodeBeforeSolution ?? PROBLEMS[currentIdx].starterCode)
+      : editor.getValue();
+    editor.setOption('readOnly', false);
+  }
+  currentIdx  = idx;
+  hintVisible = false;
+  solutionVisible = false;
+  userCodeBeforeSolution = null;
+  const solBtn = document.getElementById('sol-btn');
+  if (solBtn) { solBtn.textContent = '👁 Show Solution'; solBtn.style.borderColor = ''; solBtn.style.color = ''; }
+
+  const p = PROBLEMS[idx];
+
+  // Header
+  document.getElementById('q-num').textContent   = `Problem ${p.id} · ${p.dsUsed}`;
+  document.getElementById('q-title').textContent  = p.title;
+  document.getElementById('q-tags').innerHTML = [p.difficulty, ...p.tags].map((t, i) => {
+    const style = i === 0 ? DIFF_STYLE[t] || '' : TAG_STYLES[(i-1) % TAG_STYLES.length];
+    return `<span class="q-tag" style="${style}">${t}</span>`;
+  }).join('');
+
+  // Body
+  document.getElementById('q-body').innerHTML = p.description + `
+    <div class="complexity-row">
+      <div class="complexity-chip"><div class="cc-label">Time</div><div class="cc-val">${p.timeComplexity}</div></div>
+      <div class="complexity-chip"><div class="cc-label">Space</div><div class="cc-val">${p.spaceComplexity}</div></div>
+    </div>`;
+
+  // Editor
+  const code = savedCode[p.id] ?? p.starterCode;
+  if (editor) { editor.setValue(code); editor.clearHistory(); }
+
+  // Console
+  if (testResults[p.id]) {
+    renderConsole(testResults[p.id]);
+  } else {
+    document.getElementById('console-body').innerHTML = '<div class="console-idle">Click "Run Tests" or press Ctrl+Enter to execute your solution</div>';
+    document.getElementById('console-summary').textContent = '';
+    document.getElementById('console-summary').className = 'console-summary';
+  }
+
+  // Sidebar
+  document.querySelectorAll('.pl-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+  updateProgress();
+}
+
+function buildSidebar() {
+  const html = PROBLEMS.map((p, i) => `
+    <div class="pl-item${i === currentIdx ? ' active' : ''}" onclick="loadProblem(${i})">
+      <span class="pl-num">${p.id}</span>
+      <span class="pl-status idle" id="ps-${i}"></span>
+      <span class="pl-title">${p.title}</span>
+      <span class="pl-diff" style="${DIFF_STYLE[p.difficulty]}">${p.difficulty[0]}</span>
+    </div>`).join('');
+  document.getElementById('prob-list').innerHTML = html;
+}
+
+function updateSidebar() {
+  let solved = 0;
+  PROBLEMS.forEach((p, i) => {
+    const dot = document.getElementById('ps-' + i);
+    if (!dot) return;
+    const r = testResults[p.id];
+    if (!r) { dot.className = 'pl-status idle'; dot.textContent = ''; return; }
+    const ok = r.filter(t => t.pass).length, n = r.length;
+    if (ok === n) { dot.className = 'pl-status pass'; dot.textContent = '✓'; solved++; }
+    else if (ok > 0) { dot.className = 'pl-status part'; dot.textContent = '~'; }
+    else { dot.className = 'pl-status fail'; dot.textContent = '✗'; }
+  });
+  document.getElementById('solved-count').textContent = solved;
+  return solved;
+}
+
+function updateProgress() {
+  const answered = Object.keys(testResults).length;
+  document.getElementById('progress-fill').style.width = (answered / PROBLEMS.length * 100) + '%';
+}
+
+function toggleHint() {
+  hintVisible = !hintVisible;
+  const p    = PROBLEMS[currentIdx];
+  const body = document.getElementById('q-body');
+  const existing = body.querySelector('.hint-box');
+  if (hintVisible) {
+    if (!existing) {
+      const div = document.createElement('div');
+      div.className = 'hint-box';
+      div.innerHTML = `<div class="hint-title">💡 Hint</div>${escHtml(p.hint)}`;
+      body.insertBefore(div, body.querySelector('.complexity-row'));
+    }
+  } else {
+    if (existing) existing.remove();
+  }
+}
+
+function toggleSolution() {
+  const p = PROBLEMS[currentIdx];
+  const btn = document.getElementById('sol-btn');
+  if (!solutionVisible) {
+    // Save current user code before showing solution
+    userCodeBeforeSolution = editor.getValue();
+    savedCode[p.id] = userCodeBeforeSolution;
+    editor.setValue(p.solution || '// No solution provided yet.');
+    editor.setOption('readOnly', true);
+    btn.textContent = '✏️ Back to My Code';
+    btn.style.borderColor = '#f59e0b';
+    btn.style.color = '#f59e0b';
+    solutionVisible = true;
+  } else {
+    editor.setValue(userCodeBeforeSolution ?? p.starterCode);
+    editor.setOption('readOnly', false);
+    btn.textContent = '👁 Show Solution';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    userCodeBeforeSolution = null;
+    solutionVisible = false;
+    editor.focus();
+  }
+}
+
+function resetCode() {
+  const p = PROBLEMS[currentIdx];
+  // If solution is visible, exit it first
+  if (solutionVisible) toggleSolution();
+  editor.setValue(p.starterCode);
+  savedCode[p.id] = p.starterCode;
+  editor.focus();
+}
+
+function runTests() { executeTests(); }
+
+// ══════════════════════════════════════════════════════════════
+//  RESULTS
+// ══════════════════════════════════════════════════════════════
+function showResults() {
+  const solved = updateSidebar();
+  const total  = PROBLEMS.length;
+  const pct    = Math.round(solved / total * 100);
+
+  document.getElementById('r-pct').textContent  = pct + '%';
+  document.getElementById('r-frac').textContent = `${solved} / ${total}`;
+
+  let grade, tagline;
+  if (pct === 100)    { grade = '🏆 Full marks!';           tagline = 'Every test passing. Impressive.'; }
+  else if (pct >= 80) { grade = '🔥 Strong performance';    tagline = 'Nearly there — revisit the hard problems.'; }
+  else if (pct >= 60) { grade = '✅ Solid foundation';      tagline = 'Good grasp of the core patterns. Keep going.'; }
+  else if (pct >= 40) { grade = '📈 Making progress';       tagline = 'Intervals and sorting are your next focus.'; }
+  else                { grade = '📚 Keep practicing';       tagline = 'Work through each problem with the hints enabled.'; }
+
+  document.getElementById('r-grade').textContent   = grade;
+  document.getElementById('r-tagline').textContent = tagline;
+
+  // Per-problem breakdown
+  document.getElementById('r-breakdown').innerHTML = PROBLEMS.map((p, i) => {
+    const r  = testResults[p.id];
+    const ok = r && r.every(t => t.pass);
+    const icon = !r ? '⬜' : ok ? '✅' : '❌';
+    return `<div class="r-prob">
+      <div class="r-prob-num">#${p.id}</div>
+      <div class="r-prob-icon">${icon}</div>
+      <div class="r-prob-title">${p.title.split(' ').slice(0,2).join(' ')}</div>
+    </div>`;
+  }).join('');
+
+  showScreen('results');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function startQuiz() {
+  showScreen('quiz');
+  if (!editor) {
+    editor = CodeMirror(document.getElementById('editor-wrap'), {
+      value:            '',
+      mode:             'text/javascript',
+      theme:            'dracula',
+      lineNumbers:      true,
+      indentUnit:       2,
+      tabSize:          2,
+      indentWithTabs:   false,
+      autoCloseBrackets: true,
+      matchBrackets:    true,
+      autofocus:        true,
+      extraKeys: {
+        'Tab':        cm => cm.execCommand('indentMore'),
+        'Shift-Tab':  cm => cm.execCommand('indentLess'),
+        'Ctrl-Enter': () => executeTests(),
+        'Cmd-Enter':  () => executeTests(),
+      }
+    });
+  }
+  buildSidebar();
+  loadProblem(0);
+}
+
+function goHome() { showScreen('home'); }
+function backToQuiz() { showScreen('quiz'); }
+
+function restartQuiz() {
+  Object.keys(savedCode).forEach(k => delete savedCode[k]);
+  Object.keys(testResults).forEach(k => delete testResults[k]);
+  updateSidebar();
+  loadProblem(0);
+  showScreen('quiz');
+}
+</script>
+</body>
+</html>

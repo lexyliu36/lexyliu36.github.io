@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexander Liu — Senior Software Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07060f;
+      --bg2:       #0d0b1a;
+      --bg3:       #121026;
+      --surface:   rgba(255,255,255,0.04);
+      --border:    rgba(255,255,255,0.08);
+      --accent:    #a78bfa;       /* violet */
+      --accent2:   #fb923c;       /* warm amber-orange */
+      --accent3:   #f472b6;       /* rose pink */
+      --glow:      rgba(167,139,250,0.3);
+      --glow2:     rgba(251,146,60,0.2);
+      --text:      #f1f5f9;
+      --muted:     #94a3b8;
+      --subtle:    #475569;
+      --r:         12px;
+    }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 100;
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(13,11,26,0.85);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 50px;
+      padding: 8px 20px;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    nav:hover {
+      box-shadow: 0 0 40px rgba(167,139,250,0.2);
+      border-color: rgba(167,139,250,0.25);
+    }
+    nav a {
+      color: var(--muted); text-decoration: none; font-size: 0.85rem;
+      font-weight: 500; padding: 6px 14px; border-radius: 30px;
+      transition: color 0.2s, background 0.2s;
+      letter-spacing: 0.02em;
+    }
+    nav a:hover { color: var(--text); background: rgba(167,139,250,0.1); }
+    nav .nav-cta {
+      color: var(--accent); border: 1px solid rgba(167,139,250,0.35);
+    }
+    nav .nav-cta:hover { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+
+    /* ── Layout ── */
+    section { position: relative; z-index: 1; }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* ────────────────────────────────────────
+       HERO + ANIMATED BACKGROUND
+    ──────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 0 80px;
+      position: relative; overflow: hidden;
+    }
+
+    /* Dark radial vignette */
+    #hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, var(--bg) 100%);
+      pointer-events: none; z-index: 1;
+    }
+
+    /* Animated orb canvas */
+    .orb-canvas {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(72px);
+      will-change: transform;
+    }
+
+    /* Orb 1 — violet */
+    .orb-1 {
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, #7c3aed 0%, #a78bfa 45%, transparent 70%);
+      opacity: 0.6;
+    }
+    /* Orb 2 — amber-orange */
+    .orb-2 {
+      width: 480px; height: 480px;
+      background: radial-gradient(circle, #ea580c 0%, #fb923c 45%, transparent 70%);
+      opacity: 0.55;
+    }
+    /* Orb 3 — rose */
+    .orb-3 {
+      width: 340px; height: 340px;
+      background: radial-gradient(circle, #be185d 0%, #f472b6 50%, transparent 70%);
+      opacity: 0.4;
+    }
+    /* Orb 4 — indigo */
+    .orb-4 {
+      width: 380px; height: 380px;
+      background: radial-gradient(circle, #4338ca 0%, #818cf8 55%, transparent 70%);
+      opacity: 0.35;
+    }
+
+    /* Subtle grid overlay */
+    .hero-grid-overlay {
+      position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(167,139,250,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167,139,250,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 80%);
+    }
+
+    /* Hero content sits above orbs */
+    .hero-content { position: relative; z-index: 2; width: 100%; }
+
+    .hero-layout {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 48px; align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(167,139,250,0.1);
+      border: 1px solid rgba(167,139,250,0.25);
+      border-radius: 30px; padding: 6px 14px;
+      font-size: 0.78rem; font-weight: 500;
+      color: #c4b5fd; letter-spacing: 0.06em;
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.4rem, 5vw, 3.6rem);
+      font-weight: 700; line-height: 1.1;
+      letter-spacing: -0.03em; margin-bottom: 16px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #a78bfa 0%, #fb923c 55%, #f472b6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: 1.05rem; color: var(--muted); line-height: 1.75;
+      margin-bottom: 32px; max-width: 460px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: #fff;
+      padding: 12px 24px; border-radius: 8px;
+      font-weight: 600; font-size: 0.9rem; text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      box-shadow: 0 4px 24px rgba(124,58,237,0.45);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(124,58,237,0.6); opacity: 0.92; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.04); color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 24px; border-radius: 8px;
+      font-weight: 500; font-size: 0.9rem; text-decoration: none;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .btn-secondary:hover { transform: translateY(-2px); border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.07); }
+
+    /* ── Hero card ── */
+    .hero-card {
+      background: rgba(13,11,26,0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 20px; padding: 32px;
+      position: relative; overflow: hidden;
+    }
+    .hero-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(167,139,250,0.6), rgba(251,146,60,0.4), transparent);
+    }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .stat {
+      text-align: center; padding: 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--r);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .stat-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2rem; font-weight: 700;
+      background: linear-gradient(135deg, #a78bfa, #fb923c);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; }
+
+    .tag-cloud { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; }
+    .tag {
+      font-size: 0.72rem; padding: 4px 10px; border-radius: 4px;
+      background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.2);
+      color: #c4b5fd; font-weight: 500; letter-spacing: 0.02em;
+    }
+    .tag.amber  { background: rgba(251,146,60,0.08);  border-color: rgba(251,146,60,0.22);  color: #fcd34d; }
+    .tag.rose   { background: rgba(244,114,182,0.08); border-color: rgba(244,114,182,0.22); color: #f9a8d4; }
+    .tag.emerald{ background: rgba(52,211,153,0.08);  border-color: rgba(52,211,153,0.22);  color: #6ee7b7; }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(167,139,250,0.15) 30%, rgba(251,146,60,0.1) 70%, transparent);
+    }
+
+    /* ── Section headings ── */
+    .section-label {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 8px; display: inline-block;
+    }
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 700; letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .section-desc { color: var(--muted); font-size: 1rem; max-width: 560px; line-height: 1.7; }
+    .section-header { margin-bottom: 48px; }
+
+    /* ── About / Skills ── */
+    #about { padding: 100px 0; }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .skill-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 24px;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+      cursor: default;
+    }
+    .skill-card:hover {
+      border-color: rgba(167,139,250,0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(124,58,237,0.12);
+    }
+    .skill-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: 12px;
+    }
+    .skill-icon.violet  { background: rgba(167,139,250,0.12); }
+    .skill-icon.amber   { background: rgba(251,146,60,0.12);  }
+    .skill-icon.rose    { background: rgba(244,114,182,0.12); }
+    .skill-icon.emerald { background: rgba(52,211,153,0.12);  }
+    .skill-icon.indigo  { background: rgba(129,140,248,0.12); }
+    .skill-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; color: var(--text); }
+    .skill-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill {
+      font-size: 0.7rem; padding: 3px 9px; border-radius: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); font-weight: 500;
+    }
+
+    /* ── Experience ── */
+    #experience { padding: 100px 0; background: var(--bg2); }
+
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 1px;
+      background: linear-gradient(to bottom, var(--accent), rgba(251,146,60,0.3), transparent);
+    }
+    .timeline-item { position: relative; margin-bottom: 52px; }
+    .timeline-item:last-child { margin-bottom: 0; }
+
+    .timeline-dot {
+      position: absolute; left: -38px; top: 6px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg2);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.2);
+    }
+    .timeline-dot.current {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.2), 0 0 14px rgba(167,139,250,0.5);
+    }
+
+    .exp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 4px; flex-wrap: wrap; }
+    .exp-role { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--text); }
+    .exp-date {
+      font-size: 0.78rem; color: var(--muted); font-weight: 500;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+    }
+    .exp-company { color: var(--accent2); font-size: 0.9rem; font-weight: 500; margin-bottom: 16px; }
+
+    .exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .exp-bullets li {
+      font-size: 0.88rem; color: var(--muted); line-height: 1.65;
+      padding-left: 18px; position: relative;
+    }
+    .exp-bullets li::before {
+      content: ''; position: absolute; left: 0; top: 9px;
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .exp-bullets li strong { color: var(--text); font-weight: 600; }
+
+    .exp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+
+    /* Callout */
+    .callout {
+      background: linear-gradient(135deg, rgba(167,139,250,0.07), rgba(251,146,60,0.04));
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: var(--r); padding: 18px 22px;
+      margin: 14px 0;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .callout-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+    .callout-text { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+    .callout-text strong { color: #c4b5fd; font-weight: 600; }
+
+    /* ── Education ── */
+    #education { padding: 100px 0; }
+
+    .edu-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 36px;
+      display: flex; gap: 28px; align-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .edu-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    }
+    .edu-card:hover {
+      border-color: rgba(167,139,250,0.25);
+      box-shadow: 0 8px 40px rgba(124,58,237,0.1);
+    }
+    .edu-logo {
+      width: 64px; height: 64px; border-radius: 14px;
+      background: linear-gradient(135deg, #c8102e, #a00d26);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 1.1rem; color: white; flex-shrink: 0;
+    }
+    .edu-degree { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
+    .edu-school { color: var(--accent2); font-size: 0.95rem; font-weight: 500; margin-bottom: 8px; }
+    .edu-year { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── Contact ── */
+    #contact { padding: 100px 0 60px; }
+
+    .contact-card {
+      background: var(--bg2); border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 24px; padding: 56px 48px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .contact-card::before {
+      content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 500px; height: 300px;
+      background: radial-gradient(ellipse, rgba(167,139,250,0.12), rgba(251,146,60,0.06), transparent 70%);
+      pointer-events: none;
+    }
+    .contact-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700;
+      letter-spacing: -0.02em; margin-bottom: 16px;
+    }
+    .contact-sub { color: var(--muted); font-size: 1rem; margin-bottom: 40px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .contact-links { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+    .contact-link {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      padding: 14px 22px; border-radius: 10px;
+      color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      transition: border-color 0.2s, transform 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .contact-link:hover {
+      border-color: rgba(167,139,250,0.35);
+      transform: translateY(-2px);
+      background: rgba(167,139,250,0.06);
+      box-shadow: 0 4px 20px rgba(124,58,237,0.15);
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--subtle); font-size: 0.8rem;
+      position: relative; z-index: 1;
+    }
+
+    /* ── Fade-in ── */
+    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav { top: 12px; padding: 6px 12px; }
+      nav a { padding: 5px 10px; font-size: 0.8rem; }
+      .hero-layout { grid-template-columns: 1fr; gap: 32px; }
+      .hero-card { order: -1; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .edu-card { flex-direction: column; text-align: center; padding: 28px; }
+      .contact-card { padding: 36px 24px; }
+      #about, #experience, #education, #contact { padding: 72px 0; }
+      .orb-1 { width: 320px; height: 320px; }
+      .orb-2 { width: 280px; height: 280px; }
+    }
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; }
+      .btn-primary, .btn-secondary { justify-content: center; }
+      .contact-links { flex-direction: column; align-items: center; }
+      .contact-link { width: 100%; max-width: 300px; justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="#about">About</a>
+    <a href="#experience">Experience</a>
+    <a href="#education">Education</a>
+    <a href="#contact" class="nav-cta">Contact</a>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero">
+    <!-- Animated background -->
+    <div class="orb-canvas" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+      <div class="orb orb-4"></div>
+    </div>
+    <div class="hero-grid-overlay" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <div class="container">
+        <div class="hero-layout">
+          <!-- Left -->
+          <div class="fade-in">
+            <div class="hero-badge">
+              <span class="dot"></span>
+              Open to opportunities
+            </div>
+            <h1>
+              Alexander<br />
+              <span class="gradient-text">Liu</span>
+            </h1>
+            <p class="hero-sub">
+              Full-stack engineering leader with <strong>12+ years</strong> shipping production systems in healthcare &amp; fintech — from HIPAA-compliant platforms to internationally scaled React Native apps.
+            </p>
+            <div class="hero-actions">
+              <a href="#experience" class="btn-primary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                View My Work
+              </a>
+              <a href="mailto:alexander.liu.tech@gmail.com" class="btn-secondary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                Get In Touch
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: Stats card -->
+          <div class="fade-in" style="transition-delay:0.15s">
+            <div class="hero-card">
+              <div class="stat-grid">
+                <div class="stat">
+                  <div class="stat-num">12+</div>
+                  <div class="stat-label">Years Experience</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-num">3</div>
+                  <div class="stat-label">Companies</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-num">91%</div>
+                  <div class="stat-label">Test Coverage</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-num">3</div>
+                  <div class="stat-label">Global Markets</div>
+                </div>
+              </div>
+              <div class="tag-cloud">
+                <span class="tag">TypeScript</span>
+                <span class="tag">React Native</span>
+                <span class="tag amber">AWS</span>
+                <span class="tag emerald">HIPAA</span>
+                <span class="tag rose">AI-Assisted Dev</span>
+                <span class="tag">React</span>
+                <span class="tag amber">Python</span>
+                <span class="tag emerald">CI/CD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Skills -->
+  <section id="about">
+    <div class="container">
+      <div class="section-header fade-in">
+        <div class="section-label">Expertise</div>
+        <h2 class="section-title">Skills &amp; Technologies</h2>
+        <p class="section-desc">Expert at leading high-priority technical projects end-to-end, systematizing engineering knowledge into reusable team assets, and leveraging AI-assisted workflows to accelerate delivery velocity.</p>
+      </div>
+      <div class="skills-grid">
+        <div class="skill-card fade-in">
+          <div class="skill-icon violet">⚛️</div>
+          <h3>Frontend</h3>
+          <div class="skill-pills">
+            <span class="pill">React</span><span class="pill">React Native</span>
+            <span class="pill">TypeScript</span><span class="pill">JavaScript ES6+</span>
+            <span class="pill">Redux</span><span class="pill">HTML5</span><span class="pill">CSS/SASS</span>
+          </div>
+        </div>
+        <div class="skill-card fade-in" style="transition-delay:.05s">
+          <div class="skill-icon amber">🐍</div>
+          <h3>Backend &amp; Infrastructure</h3>
+          <div class="skill-pills">
+            <span class="pill">Python</span><span class="pill">Django</span>
+            <span class="pill">REST APIs</span><span class="pill">AWS</span>
+            <span class="pill">Kubernetes</span><span class="pill">PostgreSQL</span>
+          </div>
+        </div>
+        <div class="skill-card fade-in" style="transition-delay:.1s">
+          <div class="skill-icon rose">🧪</div>
+          <h3>Testing &amp; Quality</h3>
+          <div class="skill-pills">
+            <span class="pill">Jest</span><span class="pill">BDD</span>
+            <span class="pill">Integration Testing</span><span class="pill">BrowserStack</span>
+            <span class="pill">GitHub Actions</span><span class="pill">CI/CD</span>
+          </div>
+        </div>
+        <div class="skill-card fade-in" style="transition-delay:.15s">
+          <div class="skill-icon indigo">🤖</div>
+          <h3>AI-Assisted Development</h3>
+          <div class="skill-pills">
+            <span class="pill">Claude</span><span class="pill">GitHub Copilot</span>
+            <span class="pill">Cursor</span><span class="pill">Prompt Engineering</span>
+          </div>
+        </div>
+        <div class="skill-card fade-in" style="transition-delay:.2s">
+          <div class="skill-icon emerald">🏥</div>
+          <h3>Compliance &amp; Security</h3>
+          <div class="skill-pills">
+            <span class="pill">HIPAA</span><span class="pill">PHI Handling</span>
+            <span class="pill">Data Subject Requests</span><span class="pill">GDPR Workflows</span>
+          </div>
+        </div>
+        <div class="skill-card fade-in" style="transition-delay:.25s">
+          <div class="skill-icon amber">🚀</div>
+          <h3>Mobile &amp; DevOps</h3>
+          <div class="skill-pills">
+            <span class="pill">App Store Connect</span><span class="pill">Google Play</span>
+            <span class="pill">Kotlin</span><span class="pill">New Architecture RN</span><span class="pill">Git</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Experience -->
+  <section id="experience">
+    <div class="container">
+      <div class="section-header fade-in">
+        <div class="section-label">Career</div>
+        <h2 class="section-title">Experience</h2>
+        <p class="section-desc">12+ years building production systems across healthcare, fintech, and digital health — from co-founder to senior engineering leader.</p>
+      </div>
+      <div class="timeline">
+
+        <!-- Click Therapeutics -->
+        <div class="timeline-item fade-in">
+          <div class="timeline-dot current"></div>
+          <div class="exp-header">
+            <div class="exp-role">Senior Software Engineer</div>
+            <div class="exp-date">Feb 2022 — Present</div>
+          </div>
+          <div class="exp-company">Click Therapeutics, Inc.</div>
+          <div class="callout">
+            <div class="callout-icon">⚡</div>
+            <div class="callout-text">
+              <strong>10× faster delivery:</strong> Led React Native upgrade v68→v78 using Claude Sonnet to scope multi-package dependency upgrades — reducing cycle from <strong>~1 month of overtime to 2 days–2 weeks</strong>.
+            </div>
+          </div>
+          <ul class="exp-bullets">
+            <li>Authored an <strong>AI-assisted RN upgrade checklist</strong> capturing historical failure patterns; adopted team-wide, compounding time savings across future migration cycles</li>
+            <li>Designed a <strong>locale-based folder structure &amp; feature flag architecture</strong> enabling granular, region-specific configuration across <strong>US, UK, and Japan</strong> market launches</li>
+            <li>Built a <strong>BDD + integration testing framework in Jest from scratch</strong>, driving code coverage to <strong>91%</strong> and materially improving QA efficiency across all global product configurations</li>
+            <li>Iterated on CI/CD pipelines to remove legacy dependencies; used GitHub Copilot to accelerate code reviews and build error analysis</li>
+            <li>Participated in first-ever DSR execution via kubectl/AWS, identified process gaps, and authored an updated <strong>DSR Playbook</strong> adopted for all subsequent compliance requests</li>
+          </ul>
+          <div class="exp-tags">
+            <span class="tag">React Native</span>
+            <span class="tag">TypeScript</span>
+            <span class="tag rose">Jest / BDD</span>
+            <span class="tag">Claude AI</span>
+            <span class="tag emerald">HIPAA</span>
+            <span class="tag amber">AWS / kubectl</span>
+            <span class="tag">Kotlin</span>
+          </div>
+        </div>
+
+        <!-- Money-Media -->
+        <div class="timeline-item fade-in">
+          <div class="timeline-dot"></div>
+          <div class="exp-header">
+            <div class="exp-role">Front-End Developer</div>
+            <div class="exp-date">Feb 2018 — Feb 2022</div>
+          </div>
+          <div class="exp-company">Money-Media (Financial Times)</div>
+          <ul class="exp-bullets">
+            <li>Rebuilt the front-end ecosystem for major global financial publications (<strong>FundFire, Ignites, Agenda</strong>) using React and TypeScript, delivering a responsive, high-performance reading experience at scale</li>
+            <li>Designed and shipped a <strong>custom React-based WYSIWYG CMS</strong>, empowering editorial teams to manage and publish real-time financial headlines without engineering dependency</li>
+            <li>Built a full <strong>JSON-to-PDF pipeline</strong> with custom UI, enabling editors to dynamically generate branded hard-copy financial reports on demand</li>
+          </ul>
+          <div class="exp-tags">
+            <span class="tag">React</span>
+            <span class="tag">TypeScript</span>
+            <span class="tag rose">CMS</span>
+            <span class="tag amber">PDF Pipeline</span>
+            <span class="tag">Financial Times</span>
+          </div>
+        </div>
+
+        <!-- Treatspace -->
+        <div class="timeline-item fade-in">
+          <div class="timeline-dot"></div>
+          <div class="exp-header">
+            <div class="exp-role">Co-Founder &amp; Full Stack Developer</div>
+            <div class="exp-date">Mar 2012 — Feb 2017</div>
+          </div>
+          <div class="exp-company">Treatspace Inc.</div>
+          <ul class="exp-bullets">
+            <li>Designed, architected, and shipped a <strong>HIPAA-compliant referral network platform</strong> from MVP to market, owning both product strategy and full-stack execution</li>
+            <li>Built all back-end infrastructure including <strong>RESTful APIs and database schemas in Django/Python</strong>, handling sensitive PHI in compliance with HIPAA requirements</li>
+            <li>Created a <strong>full design system in SASS/CSS</strong> supporting complex user profile management and intuitive data entry workflows for a non-technical user base</li>
+          </ul>
+          <div class="exp-tags">
+            <span class="tag amber">Django</span>
+            <span class="tag amber">Python</span>
+            <span class="tag emerald">HIPAA / PHI</span>
+            <span class="tag rose">Full-Stack</span>
+            <span class="tag">Founder</span>
+            <span class="tag">SASS/CSS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Education -->
+  <section id="education">
+    <div class="container">
+      <div class="section-header fade-in">
+        <div class="section-label">Background</div>
+        <h2 class="section-title">Education</h2>
+      </div>
+      <div class="edu-card fade-in">
+        <div class="edu-logo">CMU</div>
+        <div>
+          <div class="edu-degree">B.S. Electrical &amp; Computer Engineering</div>
+          <div class="edu-school">Carnegie Mellon University</div>
+          <div class="edu-year">Class of 2012 · Pittsburgh, PA</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Contact -->
+  <section id="contact">
+    <div class="container">
+      <div class="contact-card fade-in">
+        <div class="contact-title">Let's Build<br /><span class="gradient-text">Something Great</span></div>
+        <p class="contact-sub">I'm always interested in new opportunities, challenging problems, and teams that care about quality. Reach out — I'd love to connect.</p>
+        <div class="contact-links">
+          <a href="mailto:alexander.liu.tech@gmail.com" class="contact-link">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            alexander.liu.tech@gmail.com
+          </a>
+          <a href="tel:4088573127" class="contact-link">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            (408) 857-3127
+          </a>
+          <a href="https://www.linkedin.com/in/mralexliu/" target="_blank" rel="noopener" class="contact-link">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            LinkedIn
+          </a>
+          <a href="https://github.com/lexyliu36" target="_blank" rel="noopener" class="contact-link">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Alexander Liu · New York, NY · Built with care</p>
+  </footer>
+
+  <script>
+    /* ── Fade-in on scroll ── */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    document.querySelectorAll('#hero .fade-in').forEach(el => setTimeout(() => el.classList.add('visible'), 100));
+
+    /* ── Orb animation via rAF (bypasses prefers-reduced-motion suppression) ── */
+    (function () {
+      const hero   = document.getElementById('hero');
+      const orbs   = [
+        document.querySelector('.orb-1'),
+        document.querySelector('.orb-2'),
+        document.querySelector('.orb-3'),
+        document.querySelector('.orb-4'),
+      ];
+      if (!orbs[0] || !hero) return;
+
+      // Each orb has an independent set of sine-wave params so they move naturally
+      const configs = [
+        // [speedX, speedY, ampX, ampY, originX%, originY%]
+        { sx: 0.00042, sy: 0.00031, ax: 160, ay: 130, ox: -10, oy: -15 },
+        { sx: 0.00038, sy: 0.00045, ax: 140, ay: 120, ox: 75,  oy: 65  },
+        { sx: 0.00055, sy: 0.00062, ax: 100, ay: 90,  ox: 60,  oy: 20  },
+        { sx: 0.00029, sy: 0.00051, ax: 120, ay: 100, ox: 20,  oy: 45  },
+      ];
+
+      // Stagger starting phase so orbs don't all start at the same position
+      const phase = [0, Math.PI * 0.7, Math.PI * 1.3, Math.PI * 0.4];
+
+      let running = true;
+
+      function tick(t) {
+        if (!running) return;
+        orbs.forEach((orb, i) => {
+          const c  = configs[i];
+          const hw = orb.offsetWidth  / 2;
+          const hh = orb.offsetHeight / 2;
+          const x  = (hero.offsetWidth  * c.ox / 100) + Math.sin(t * c.sx + phase[i]) * c.ax - hw;
+          const y  = (hero.offsetHeight * c.oy / 100) + Math.cos(t * c.sy + phase[i]) * c.ay - hh;
+          orb.style.transform = `translate(${x}px, ${y}px)`;
+        });
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
+
+      // Pause when tab is hidden to save CPU
+      document.addEventListener('visibilitychange', () => {
+        running = !document.hidden;
+        if (running) requestAnimationFrame(tick);
+      });
+    })();
+  </script>
+</body>
+</html>
